@@ -1,0 +1,19 @@
+# Kunci & identitas asli — JANGAN PERNAH masuk repo publik
+authorized_keys
+host_key
+host_key.pub
+*.key
+*.pub
+
+# File runtime (pid, status)
+run/
+
+# Log
+*.log
+
+# Alamat tunnel sementara
+ALAMAT.txt
+
+# Python
+__pycache__/
+*.pyc
