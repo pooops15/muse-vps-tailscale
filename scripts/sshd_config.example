@@ -1,0 +1,18 @@
+# Contoh konfigurasi sshd khusus project ini.
+# setup-sshd.sh menyalin file ini jadi sshd_config sambil mengganti
+# __PROJECT_DIR__ dan __SSH_LOCAL_PORT__ dengan nilai beneran di mesin kamu.
+#
+# Intinya: sshd ini cuma dengar di localhost, login password MATI total,
+# yang bisa masuk cuma pemegang kunci yang barisnya ada di authorized_keys.
+Port __SSH_LOCAL_PORT__
+ListenAddress 127.0.0.1
+HostKey __PROJECT_DIR__/host_key
+PidFile __PROJECT_DIR__/run/sshd.pid
+AuthorizedKeysFile __PROJECT_DIR__/authorized_keys
+PermitRootLogin prohibit-password
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+UsePAM no
+StrictModes no
+AllowUsers root
