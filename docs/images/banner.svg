@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <rect x="0" y="0" width="1280" height="10" fill="#58a6ff"/>
+  <text x="640" y="150" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="84" font-weight="700" fill="#f0f6fc">muse-vps-tailscale</text>
+  <text x="640" y="215" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="34" fill="#8b949e">SSH into your Muse VM — privately, over Tailscale</text>
+  <text x="640" y="262" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="30" fill="#8b949e">a reverse SSH tunnel parked on your own laptop</text>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="600">
+    <rect x="70" y="330" width="230" height="72" rx="14" fill="#161b22" stroke="#58a6ff" stroke-width="2"/>
+    <text x="185" y="377" text-anchor="middle" fill="#f0f6fc">Your laptop</text>
+    <text x="322" y="378" text-anchor="middle" fill="#58a6ff" font-size="34">→</text>
+    <rect x="345" y="330" width="230" height="72" rx="14" fill="#161b22" stroke="#58a6ff" stroke-width="2"/>
+    <text x="460" y="377" text-anchor="middle" fill="#f0f6fc">localhost:2223</text>
+    <text x="597" y="378" text-anchor="middle" fill="#58a6ff" font-size="34">→</text>
+    <rect x="620" y="330" width="230" height="72" rx="14" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+    <text x="735" y="377" text-anchor="middle" fill="#f0f6fc">Tailscale</text>
+    <text x="872" y="378" text-anchor="middle" fill="#58a6ff" font-size="34">→</text>
+    <rect x="895" y="330" width="230" height="72" rx="14" fill="#161b22" stroke="#bc8cff" stroke-width="2"/>
+    <text x="1010" y="377" text-anchor="middle" fill="#f0f6fc">Muse VM</text>
+  </g>
+
+  <text x="640" y="492" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="30" fill="#3fb950">Key-only login • Private • No 60-minute limit</text>
+  <text x="640" y="545" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" fill="#8b949e">Beginner-proof tutorials in English &amp; Bahasa Indonesia</text>
+  <rect x="0" y="630" width="1280" height="10" fill="#58a6ff"/>
+</svg>
