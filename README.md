@@ -71,6 +71,9 @@ open it. There is no public address, no company in the middle, and
   Tailscale network can take part, not the whole internet
 - You want login with **no password at all** — replaced by a key,
   which is far stronger and cannot be guessed
+- You want the door to **heal itself after a VM reset** — an
+  auto-recovery guard restarts the VM side within about a minute,
+  all by itself, without you asking anyone (tutorial Part 4)
 
 ## 3. Who this is for — and who it is not for
 
@@ -155,6 +158,9 @@ So the folders never scare you — here is everything and what it is for:
 | `scripts/reverse-start.sh` | **The starter** — launches the reverse tunnel from the VM to the laptop, guarded by the watchdog |
 | `scripts/reverse-supervisor.sh` | **The watchdog** — opens the reverse ssh and restarts it every 10 seconds if it drops |
 | `scripts/reverse-stop.sh` | **The stopper** — kills the tunnel and its watchdog together |
+| `scripts/ensure-up.sh` | **The self-healing guard** — checks Tailscale, the sshd binary, the local sshd and the supervisor in order, and repairs whatever a VM reset killed; a no-op when everything is healthy |
+| `scripts/ensure-hook.sh` | **The scheduler script** — calls the guard every 30 seconds from the author's runtime hook and wakes the agent only once per real incident |
+| `scripts/ssh-tunnel-ensure.hook.json.example` | **Example hook definition** — the 30-second polling schedule plus a sketch of the wake-up prompt for the guard |
 | `scripts/tsconnect.py` | A small ProxyCommand helper: ferries the VM's ssh connections into the tailnet through the runtime proxy (needed on the author's sandbox; see the note in the tutorial) |
 | `scripts/windows-setup.ps1` | **The Windows laptop preparer** — checks admin, checks sshd, asks for the VM's public key, installs the firewall rule + key + file permissions |
 | `LICENSE` | The MIT license |
@@ -197,6 +203,19 @@ The full tutorial:
 
 - 🇬🇧 **[docs/TUTORIAL.md](docs/TUTORIAL.md)** — plain English, beginner-proof
 - 🇮🇩 **[docs/TUTORIAL.id.md](docs/TUTORIAL.id.md)** — Indonesian version, super-simple language
+
+**And it heals itself after resets (auto-recovery).** A VM reset
+still stops the running sshd and supervisor — but the setup no
+longer waits for a human. A guard script (`scripts/ensure-up.sh`)
+checks Tailscale → sshd binary → local sshd → supervisor and
+repairs whatever is broken, polled every 30 seconds by a runtime
+hook that lives in `$HOME` — inside the one place a reset cannot
+wipe. The repair itself is pure bash (**zero AI tokens**); the
+agent is only woken once per incident, to verify and report. After
+a reset: **wait about a minute, then just connect.** The full
+story, including the one honest limit (a fully logged-out Tailscale
+still needs your approval) and a real flock bug worth knowing,
+lives in tutorial Part 4.
 
 ## 8. Compared with Pinggy (the author's old road)
 
@@ -261,8 +280,10 @@ variables; nothing real is baked into the code.
 - **Muse sandboxes can be reset.** The running sshd and watchdog die
   with the machine — but every file in the project folder (in `$HOME`)
   survives, the laptop side is permanent, and on the author's runtime
-  the Tailscale connection sticks across resets. Lighting the VM side
-  again is a two-command job.
+  the Tailscale connection sticks across resets. With the
+  auto-recovery guard (tutorial Part 4), the VM side relights itself
+  within about a minute; without it, relighting manually is a
+  two-command job.
 - **The sandbox's built-in Tailscale is client-only.** That is the
   whole reason this reverse detour exists. On a machine with native
   Tailscale routing, you may not need this project at all.
@@ -334,6 +355,15 @@ and a `tailscale up` that gets stuck without a link (the cure:
   through the parked port was answered by the Muse VM itself. The
   watchdog (supervisor) was added so the tunnel heals itself when it
   drops.
+- **2026-10-05** — **Auto-recovery landed.** A real morning reset
+  (06:24) greeted the author with `Connection refused` because the
+  VM side was still dark. The answer shipped the same day: the
+  `ensure-up.sh` guard plus a runtime hook living in `$HOME` that
+  polls it every 30 seconds (the repair is pure bash — zero AI
+  tokens — and the agent wakes only once per incident). Proven live
+  the same day: sshd and supervisor killed on purpose, everything
+  back by itself within 75 seconds. After a reset now: wait about a
+  minute, then connect.
 
 Every step and error symptom in this repo is a real result from the
 running setup — not invention.
