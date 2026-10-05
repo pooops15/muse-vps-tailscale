@@ -366,7 +366,7 @@ To stop the tunnel (from the VM side): `bash scripts/reverse-stop.sh`.
 
 ---
 
-## Part 4 — After the VM machine gets reset
+## Part 4 — After the VM machine gets reset (it heals itself)
 
 Muse sandboxes can be reset at any time. What happens:
 
@@ -375,10 +375,99 @@ Muse sandboxes can be reset at any time. What happens:
 | The laptop side (firewall, VM key, Tailscale app) | **Permanently fine**, never needs redoing |
 | The VM's Tailscale connection | On the author's runtime it sticks across resets, with the same IP |
 | Files in the project folder (`$HOME`) | **Safe** — host key and authorized_keys survive |
-| The running sshd + supervisor | They stop. Start them again: `bash scripts/setup-sshd.sh`, then repeat step 2.6 |
+| The running sshd + supervisor | They stop — **and the auto-recovery guard starts them again by itself** (below) |
 
-So after a reset, your homework is zero — just ask Muse to light the
-VM side again.
+So after a reset, your homework is zero: **wait about one minute,
+then connect as usual.** Only if that still fails do you need the
+manual fallback at the end of this part.
+
+### 4.1 Auto-recovery: the `ensure-up.sh` guard
+
+This project ships a small guard script, `scripts/ensure-up.sh`.
+Every time it runs, it checks four things **in order** and repairs
+whatever is broken:
+
+1. **Is Tailscale Connected?** If not, it stops and reports
+   `TAILSCALE_DOWN`. No script can fix this one — approving a device
+   is a human's job. This is the one honest limit of the whole system.
+2. **Does the sshd binary still exist?** A reset can wipe system
+   packages. If it is gone, the guard reinstalls `openssh-server`.
+3. **Is the local sshd listening** on port `2222`? If not, the guard
+   starts it, using the project folder's own config.
+4. **Is the supervisor alive?** If not, the guard starts it — and
+   the parked port `2223` reappears on your laptop.
+
+If everything is already healthy, the guard does **nothing** and
+prints `HEALTHY`. That makes it safe to call over and over again
+(idempotent) — from a scheduler, or by hand.
+
+### 4.2 Who calls the guard? A scheduler that survives resets
+
+On the author's setup, the caller is a **runtime hook**
+(`scripts/ensure-hook.sh`, registered with
+`scripts/ssh-tunnel-ensure.hook.json.example`) that polls every
+**30 seconds**. Two design choices are the whole trick:
+
+- **The hook lives in `$HOME`, not in systemd.** A VM reset wipes
+  everything outside `$HOME` — systemd units in `/etc` included. A
+  scheduler stored inside `$HOME` survives every reset, which is
+  exactly when it is needed most.
+- **The repair itself is pure bash and costs zero AI tokens.** The
+  hook only *wakes the agent* in three situations, at most once per
+  incident: right after an auto-repair (so the agent can verify and
+  tell you the door is back), when Tailscale has been down for
+  5+ minutes (you need to approve again), or when a repair failed.
+
+Proof from the author's machine (2026-10-05): sshd and the supervisor
+were **killed on purpose** to simulate a reset — within **75
+seconds** everything was back by itself, and the laptop port was
+listening again. (That same morning, before this guard existed, a
+real 06:24 reset had greeted the author with `Connection refused` —
+this guard is the answer to that morning.)
+
+One requirement: the scheduler's environment must contain the same
+two variables `reverse-start.sh` needs (`LAPTOP_TS_IP`, `WIN_USER`) —
+export them wherever your scheduler keeps its environment.
+
+### 4.3 The flock gotcha (a real bug, so you don't repeat it)
+
+`ensure-up.sh` takes a `flock` lock so two guard runs can never
+collide. The first version had a nasty bug: the daemons the guard
+started (sshd, the supervisor) **inherited the lock's file
+descriptor** — so the lock stayed locked *forever*, held by a daemon
+that never exits, and every later guard run politely reported
+`LOCKED` and repaired nothing at all. The cure is one tiny
+redirection: start every daemon with the lock fd closed — `9>&-`.
+If you adapt this script, do not delete those four characters.
+
+### 4.4 The manual fallback (always there)
+
+If auto-recovery is not installed, or things are still broken after
+a minute, run the guard once by hand:
+
+```
+bash scripts/ensure-up.sh        # one shot: checks + fixes everything
+```
+
+—or just ask your agent ("turn the Tailscale SSH back on"). The old
+fully-manual road — step 2.3, then step 2.6 — still works exactly as
+before.
+
+### 4.5 On a plain Linux machine (no fancy runtime)
+
+You do not need the author's runtime hook. Anything that calls
+`ensure-up.sh` regularly does the job:
+
+- **cron** — one line (edit with `crontab -e`), checks every minute:
+
+  ```
+  * * * * * LAPTOP_TS_IP=YOUR_LAPTOP_TAILNET_IP WIN_USER=YOUR_WINDOWS_USERNAME /path/to/project/scripts/ensure-up.sh >> /path/to/project/ensure.log 2>&1
+  ```
+
+- or a **systemd service + timer** running the same script. On a
+  normal VPS that is never wiped, systemd is perfectly fine — the
+  `$HOME`-hook choice above only matters on reset-happy sandboxes
+  like the author's.
 
 ---
 
@@ -386,7 +475,7 @@ VM side again.
 
 | Symptom | Most likely cause | The fix |
 |---|---|---|
-| `Connection refused` when connecting to 2223 | The VM's tunnel or sshd is down | On the VM: redo steps 2.3 then 2.6; check on the laptop whether 2223 is LISTENING |
+| `Connection refused` when connecting to 2223 | The VM's tunnel or sshd is down (very often: the VM was just reset) | Wait about a minute — the auto-recovery guard (Part 4) restarts everything by itself. Still refused? Run `bash scripts/ensure-up.sh` on the VM, then check on the laptop whether 2223 is LISTENING |
 | `Permission denied (publickey)` | The wrong key is offered, or your public key is not in the VM's `authorized_keys` | Make sure the command uses `-i muse-key`, that CMD sits in the folder containing the `muse-key` file, and that its `.pub` line was pasted onto the VM (2.2) |
 | The VM calling the laptop always fails / empty banner | The laptop is refusing: firewall not open yet, or Allow incoming connections off | Redo 1.4 and 1.6 exactly; those two were the cause on the author's setup |
 | Reading a `.pub` inside the Windows `.ssh` folder gives `Access is denied` | The stock Windows `.ssh` folder is locked in a strange way (the author's real experience, even as admin) | Don't fight it. Use a dedicated key in your home folder, like step 1.3 |
