@@ -72,6 +72,10 @@ perusahaan perantara, dan **nggak ada hitungan mundur 60 menit**.
   kamu yang bisa ikutan, bukan seluruh internet
 - Kamu mau login **tanpa password sama sekali** — diganti kunci, yang
   jauh lebih kuat dan nggak bisa ditebak-tebak orang
+- Kamu mau pintunya **sembuh sendiri sesudah VM di-reset** — penjaga
+  auto-recovery menyalakan lagi sisi VM dalam waktu kira-kira 1
+  menit, sendiri, tanpa kamu perlu nyuruh siapa-siapa (Bagian 4 di
+  tutorial)
 
 ## 3. Siapa yang cocok pakai ini, siapa yang nggak
 
@@ -154,6 +158,9 @@ Biar kamu nggak takut sama foldernya — ini semua isinya dan gunanya:
 | `scripts/reverse-start.sh` | **Penyalanya** — menjalankan tunnel reverse dari VM ke laptop, dijaga pengawas |
 | `scripts/reverse-supervisor.sh` | **Si pengawas** — membuka ssh reverse-nya dan menyalakan lagi tiap 10 detik kalau putus |
 | `scripts/reverse-stop.sh` | **Pemadamnya** — mematikan tunnel + pengawasnya sekaligus |
+| `scripts/ensure-up.sh` | **Si penjaga sembuh-sendiri** — memeriksa Tailscale, binary sshd, sshd lokal, dan supervisor berurutan, lalu membetulkan apa pun yang dibunuh reset VM; nggak ngapa-ngapain kalau semua sehat |
+| `scripts/ensure-hook.sh` | **Skrip penjadwalnya** — memanggil si penjaga tiap 30 detik dari hook runtime penulis dan membangunkan agent cuma sekali per kejadian beneran |
+| `scripts/ssh-tunnel-ensure.hook.json.example` | **Contoh definisi hook** — jadwal polling 30 detik plus kerangka prompt bangun buat si penjaga |
 | `scripts/tsconnect.py` | Alat kecil ProxyCommand: mengantar koneksi ssh VM masuk ke tailnet lewat proxy runtime (dibutuhkan di sandbox penulis; lihat catatan di tutorial) |
 | `scripts/windows-setup.ps1` | **Script penyiap laptop Windows** — cek admin, cek sshd, minta kunci publik VM, pasang aturan firewall + kunci + izin file-nya |
 | `LICENSE` | Lisensi MIT |
@@ -195,6 +202,20 @@ Tutorial lengkapnya:
 - 🇮🇩 **[docs/TUTORIAL.id.md](docs/TUTORIAL.id.md)** — Bahasa Indonesia,
   bahasa bayi, pemula pasti bisa
 - 🇬🇧 **[docs/TUTORIAL.md](docs/TUTORIAL.md)** — English version
+
+**Dan dia sembuh sendiri sesudah reset (auto-recovery).** Reset VM
+tetap mematikan sshd dan supervisor yang sedang jalan — tapi
+sekarang setup-nya nggak nunggu manusia lagi. Skrip penjaga
+(`scripts/ensure-up.sh`) memeriksa Tailscale → binary sshd → sshd
+lokal → supervisor dan membetulkan yang rusak, dipanggil tiap 30
+detik oleh hook runtime yang tinggal di `$HOME` — satu-satunya
+tempat yang nggak bisa dihapus reset. Perbaikannya sendiri murni
+bash (**nol token AI**); agent cuma dibangunkan sekali per kejadian,
+buat verifikasi dan lapor. Sesudah reset: **tunggu kira-kira 1
+menit, lalu konek kayak biasa.** Cerita lengkapnya — termasuk satu
+batas jujurnya (Tailscale yang logout total tetap butuh persetujuan
+kamu) dan satu bug flock beneran yang layak diketahui — ada di
+Bagian 4 tutorial.
 
 ## 8. Dibandingin sama Pinggy (jalur lama penulis)
 
@@ -259,8 +280,10 @@ yang ditanam di kode.
 - **VM sandbox bisa di-reset.** Proses sshd dan pengawas yang sedang
   jalan ikut mati kalau mesinnya di-reset — tapi semua file di folder
   project (di `$HOME`) awet, sisi laptop permanen, dan koneksi
-  Tailscale-nya di runtime penulis nempel terus. Menyalakan lagi sisi
-  VM itu urusan dua perintah.
+  Tailscale-nya di runtime penulis nempel terus. Dengan penjaga
+  auto-recovery (Bagian 4 di tutorial), sisi VM menyala lagi sendiri
+  dalam waktu kira-kira 1 menit; tanpa dia pun, menyalakan lagi
+  secara manual itu urusan dua perintah.
 - **Tailscale bawaan sandbox itu client-only.** Itulah alasan seluruh
   putaran reverse ini ada. Di mesin dengan routing Tailscale asli,
   kamu mungkin nggak butuh project ini sama sekali.
@@ -327,6 +350,15 @@ penulis alami sendiri: folder `.ssh` Windows yang kena
   dan yang menjawab adalah VM Muse-nya sendiri. Pengawas
   (supervisor) ditambahkan supaya tunnel-nya bangun sendiri kalau
   putus.
+- **2026-10-05** — **Auto-recovery terpasang.** Reset beneran pagi
+  itu (06:24) menyambut penulis dengan `Connection refused` karena
+  sisi VM masih gelap. Jawabannya jadi di hari yang sama: si penjaga
+  `ensure-up.sh` plus hook runtime yang tinggal di `$HOME` dan
+  memanggilnya tiap 30 detik (perbaikannya murni bash — nol token
+  AI — dan agent cuma dibangunkan sekali per kejadian). Terbukti
+  live hari itu juga: sshd dan supervisor dibunuh sengaja, semuanya
+  balik sendiri dalam 75 detik. Sekarang sesudah reset: tunggu
+  kira-kira 1 menit, lalu konek.
 
 Semua langkah dan gejala error di repo ini adalah hasil asli dari
 setup yang jalan — bukan karangan.
