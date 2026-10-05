@@ -362,7 +362,7 @@ Mematikan tunnel (dari sisi VM): `bash scripts/reverse-stop.sh`.
 
 ---
 
-## Bagian 4 — Sesudah mesin VM di-reset
+## Bagian 4 — Sesudah mesin VM di-reset (sekarang sembuh sendiri)
 
 Sandbox Muse bisa di-reset sewaktu-waktu. Yang terjadi:
 
@@ -371,10 +371,103 @@ Sandbox Muse bisa di-reset sewaktu-waktu. Yang terjadi:
 | Sisi laptop (firewall, kunci VM, Tailscale app) | **Aman permanen**, nggak perlu diulang |
 | Koneksi Tailscale VM | Di runtime penulis, nempel terus dan IP-nya sama sesudah reset |
 | File di folder project (`$HOME`) | **Aman** — host key dan authorized_keys nggak hilang |
-| sshd + supervisor yang sedang jalan | Mati. Nyalakan lagi: `bash scripts/setup-sshd.sh` lalu ulangi langkah 2.6 |
+| sshd + supervisor yang sedang jalan | Mati — **tapi penjaga auto-recovery menyalakannya lagi sendiri** (di bawah ini) |
 
-Jadi sesudah reset, pekerjaanmu nol — cukup minta Muse menyalakan
-lagi sisi VM-nya.
+Jadi sesudah reset, pekerjaanmu nol: **tunggu kira-kira 1 menit,
+lalu konek kayak biasa.** Kalau sesudah itu masih gagal juga, baru
+pakai jalan manual di akhir bagian ini.
+
+### 4.1 Auto-recovery: si penjaga `ensure-up.sh`
+
+Project ini punya skrip penjaga kecil: `scripts/ensure-up.sh`. Tiap
+dia jalan, dia memeriksa empat hal **berurutan** dan membetulkan
+yang rusak:
+
+1. **Tailscale-nya Connected nggak?** Kalau nggak, dia berhenti dan
+   lapor `TAILSCALE_DOWN`. Yang ini nggak bisa dibetulkan skrip —
+   menyetujui perangkat itu pekerjaan manusia. Inilah satu-satunya
+   batas jujur dari seluruh sistem ini.
+2. **Binary sshd-nya masih ada nggak?** Reset bisa menghapus paket
+   sistem. Kalau hilang, si penjaga memasang ulang `openssh-server`.
+3. **sshd lokalnya lagi dengerin di port `2222` nggak?** Kalau
+   nggak, dia nyalakan, pakai config dari folder project sendiri.
+4. **Supervisor-nya hidup nggak?** Kalau nggak, dia nyalakan — dan
+   port titipan `2223` muncul lagi di laptopmu.
+
+Kalau semuanya sudah sehat, si penjaga **nggak ngapa-ngapain** dan
+cuma nulis `HEALTHY`. Makanya aman dipanggil berulang-ulang
+(idempotent) — dari penjadwal, atau manual pakai tangan.
+
+### 4.2 Siapa yang manggil penjaganya? Penjadwal yang selamat dari reset
+
+Di setup penulis, yang manggil adalah **hook runtime**
+(`scripts/ensure-hook.sh`, didaftarkan pakai
+`scripts/ssh-tunnel-ensure.hook.json.example`) yang memeriksa tiap
+**30 detik**. Dua pilihan desainnya ini inti seluruh triknya:
+
+- **Hook-nya tinggal di `$HOME`, bukan di systemd.** Reset VM
+  menghapus semua yang di luar `$HOME` — unit systemd di `/etc` ikut
+  lenyap. Penjadwal yang disimpan di dalam `$HOME` selamat dari
+  semua reset — persis saat dia paling dibutuhkan.
+- **Perbaikannya murni bash, nol token AI.** Hook cuma
+  *membangunkan agent* dalam tiga keadaan, paling banyak sekali per
+  kejadian: sesudah auto-repair berhasil (biar agent memverifikasi
+  dan mengabari kamu pintunya sudah balik), kalau Tailscale putus
+  5 menit lebih (kamu perlu menyetujui ulang), atau kalau
+  perbaikannya gagal.
+
+Bukti dari mesin penulis (2026-10-05): sshd dan supervisor-nya
+**dibunuh sengaja** buat pura-pura reset — dalam waktu **75 detik**
+semuanya nyala lagi sendiri, dan port di laptop balik dengerin.
+(Pagi yang sama, sebelum penjaga ini ada, reset beneran jam 06:24
+menyambut penulis dengan `Connection refused` — penjaga ini jawaban
+buat pagi itu.)
+
+Satu syarat: environment penjadwalnya harus berisi dua variabel
+yang sama kayak yang dibutuhkan `reverse-start.sh` (`LAPTOP_TS_IP`,
+`WIN_USER`) — pasang di tempat penjadwalmu menyimpan
+environment-nya.
+
+### 4.3 Jebakan flock (bug beneran, biar kamu nggak ngulangin)
+
+`ensure-up.sh` mengambil kunci `flock` biar dua penjaga nggak bisa
+tabrakan. Versi pertamanya punya bug yang nyebelin: daemon yang
+dinyalakan si penjaga (sshd, supervisor) **mewarisi file descriptor
+kuncinya** — alhasil kuncinya terkunci *selamanya*, dipegang daemon
+yang nggak pernah mati, dan semua penjaga berikutnya cuma lapor
+`LOCKED` tanpa membetulkan apa-apa. Obatnya satu pengalihan kecil:
+nyalakan semua daemon dengan fd kuncinya ditutup — `9>&-`. Kalau
+kamu utak-atik skrip ini, jangan hapus empat karakter itu.
+
+### 4.4 Jalan manual (selalu tersedia)
+
+Kalau auto-recovery belum terpasang, atau sesudah semenit masih
+rusak juga, jalankan si penjaga sekali pakai tangan:
+
+```
+bash scripts/ensure-up.sh        # sekali jalan: cek + betulkan semua
+```
+
+—atau bilang saja ke agent-mu: *"nyalain tailscale ssh"*. Jalan
+manual lama yang full manual — langkah 2.3 lalu 2.6 — juga tetap
+jalan persis kayak dulu.
+
+### 4.5 Di mesin Linux biasa (tanpa runtime khusus)
+
+Kamu nggak butuh hook runtime punya penulis. Apa pun yang memanggil
+`ensure-up.sh` secara teratur bisa:
+
+- **cron** — satu baris (edit pakai `crontab -e`), memeriksa tiap
+  menit:
+
+  ```
+  * * * * * LAPTOP_TS_IP=YOUR_LAPTOP_TAILNET_IP WIN_USER=YOUR_WINDOWS_USERNAME /path/ke/project/scripts/ensure-up.sh >> /path/ke/project/ensure.log 2>&1
+  ```
+
+- atau **service + timer systemd** yang menjalankan skrip yang sama.
+  Di VPS biasa yang nggak pernah dihapus, systemd sah-sah saja —
+  pilihan hook di `$HOME` di atas cuma penting di sandbox yang
+  doyan reset kayak punya penulis.
 
 ---
 
@@ -382,7 +475,7 @@ lagi sisi VM-nya.
 
 | Gejala | Sebab paling mungkin | Obatnya |
 |---|---|---|
-| `Connection refused` pas konek ke 2223 | Tunnel atau sshd VM mati | Di VM: jalankan lagi langkah 2.3 lalu 2.6; cek `netstat` laptop ada 2223 LISTENING nggak |
+| `Connection refused` pas konek ke 2223 | Tunnel atau sshd VM mati (paling sering: VM-nya baru saja di-reset) | Tunggu kira-kira 1 menit — penjaga auto-recovery (Bagian 4) menyalakannya lagi sendiri. Masih refused? Jalankan `bash scripts/ensure-up.sh` di VM, lalu cek `netstat` laptop: 2223 LISTENING nggak |
 | `Permission denied (publickey)` | Kunci yang ditawarkan salah, atau kunci publikmu belum ada di `authorized_keys` VM | Pastikan perintah pakai `-i muse-key`, posisi CMD di folder tempat file `muse-key` berada, dan baris `.pub`-nya sudah ditempel di VM (2.2) |
 | VM nelepon laptop selalu gagal / banner kosong | Laptop nahan: firewall belum kebuka atau Allow incoming connections mati | Ulangi 1.4 dan 1.6 persis; dua ini penyebab di setup penulis |
 | Baca `.pub` di folder `.ssh` Windows kena `Access is denied` | Folder `.ssh` bawaan Windows terkunci aneh (pengalaman nyata penulis, bahkan sebagai admin) | Jangan lawan. Pakai kunci khusus di folder rumah kayak langkah 1.3 |
