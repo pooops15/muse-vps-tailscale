@@ -9,7 +9,7 @@ and with no 60-minute limit.
 
 No Muse account yet? Start with the
 **[Muse claim guide](CLAIM-MUSE.md)** — VPN and no-VPN routes are
-included, plus referral code **`IB4FJR`** (redeem within 48 hours and we
+included, plus referral code **`MZMT4Y`** (redeem within 48 hours and we
 both receive 1 billion tokens).
 
 ---

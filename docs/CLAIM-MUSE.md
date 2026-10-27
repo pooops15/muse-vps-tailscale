@@ -10,14 +10,14 @@ setup.
 
 <div align="center">
 
-## 🎁 REFERRAL CODE: `IB4FJR`
+## 🎁 REFERRAL CODE: `MZMT4Y`
 
 **Redeem it within 48 hours after joining and we both receive
 1 billion Muse tokens.**
 
 ### 👉 [Join Muse here](https://muse.ai/join)
 
-**Code: `IB4FJR`**
+**Code: `MZMT4Y`**
 
 </div>
 
@@ -83,7 +83,7 @@ Do this **within 48 hours after the Muse account is created**.
 
 <div align="center">
 
-# `IB4FJR`
+# `MZMT4Y`
 
 </div>
 
@@ -95,7 +95,7 @@ Do this **within 48 hours after the Muse account is created**.
 
 1. Open **Settings** in the Muse app.
 2. Select **Redeem token**.
-3. Enter **`IB4FJR`** and confirm.
+3. Enter **`MZMT4Y`** and confirm.
 
 > Redemption lives inside **Muse** Settings—not the phone's system
 > Settings and not WhatsApp or another messaging app.

@@ -20,7 +20,7 @@ kamu sendiri.**
 
 ## 🎁 BELUM PUNYA MUSE? KLAIM BONUS 1 MILIAR TOKEN
 
-### Kode referral: `IB4FJR`
+### Kode referral: `MZMT4Y`
 
 Tukarkan kode ini di Settings Muse **dalam 48 jam setelah bergabung** dan
 kita berdua mendapatkan **1 miliar token Muse**.
@@ -127,7 +127,7 @@ Jangan mulai pasang sebelum semua ini centang:
 - [ ] **Satu akun Muse** yang aktif — VM-nya yang mau kamu masuki.
   Belum punya? Ikuti [tutorial klaim Muse](docs/CLAIM-MUSE.id.md) —
   ada jalur VPN dan tanpa VPN — lalu tukarkan kode referral
-  **`IB4FJR`** dalam 48 jam buat bonus 1 miliar token
+  **`MZMT4Y`** dalam 48 jam buat bonus 1 miliar token
 - [ ] **Satu laptop Windows** dengan akses **Administrator**, dan kamu
   bisa membiarkannya menyala selama sesi SSH
 - [ ] **Tailscale terpasang di laptop** dan sudah login pakai akun
@@ -150,7 +150,7 @@ Biar kamu nggak takut sama foldernya — ini semua isinya dan gunanya:
 | `README.id.md` | Dokumen ini (yang lagi kamu baca) |
 | `docs/TUTORIAL.id.md` | **Tutorial lengkap Bahasa Indonesia, langkah demi langkah dua sisi** — bacaan utama buat masang |
 | `docs/TUTORIAL.md` | Tutorial yang sama versi Bahasa Inggris |
-| `docs/CLAIM-MUSE.id.md` | **Tutorial klaim akun Muse pakai VPN & tanpa VPN**, lengkap dengan highlight kode referral `IB4FJR` |
+| `docs/CLAIM-MUSE.id.md` | **Tutorial klaim akun Muse pakai VPN & tanpa VPN**, lengkap dengan highlight kode referral `MZMT4Y` |
 | `docs/CLAIM-MUSE.md` | Tutorial klaim Muse yang sama versi Bahasa Inggris |
 | `docs/images/banner.svg` | Gambar judul di atas |
 | `scripts/setup-sshd.sh` | **Pemasang sshd di sisi VM** — bikin sshd key-only di localhost port 2222 dari file contoh |

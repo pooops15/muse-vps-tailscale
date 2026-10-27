@@ -20,7 +20,7 @@ laptop.**
 
 ## 🎁 DON'T HAVE MUSE YET? CLAIM A 1 BILLION TOKEN BONUS
 
-### Referral code: `IB4FJR`
+### Referral code: `MZMT4Y`
 
 Redeem this code in Muse Settings **within 48 hours after joining** and
 we both receive **1 billion Muse tokens**.
@@ -126,7 +126,7 @@ Do not start installing before all of these are ticked:
 - [ ] **One active Muse account** — its VM is the one you want to
   enter. Don't have one? Follow the
   [Muse claim guide](docs/CLAIM-MUSE.md) — VPN and no-VPN routes are
-  included — and redeem referral code **`IB4FJR`** within 48 hours for
+  included — and redeem referral code **`MZMT4Y`** within 48 hours for
   the 1 billion token bonus
 - [ ] **One Windows laptop** with **Administrator** access, which you
   can leave on for the length of your SSH session
@@ -150,7 +150,7 @@ So the folders never scare you — here is everything and what it is for:
 | `README.id.md` | This document in Indonesian |
 | `docs/TUTORIAL.md` | **The complete step-by-step tutorial, both sides** — the main reading for installing |
 | `docs/TUTORIAL.id.md` | The same tutorial in Indonesian, in super-simple language |
-| `docs/CLAIM-MUSE.md` | **How to claim a Muse account with a VPN or without one**, including the highlighted `IB4FJR` referral code |
+| `docs/CLAIM-MUSE.md` | **How to claim a Muse account with a VPN or without one**, including the highlighted `MZMT4Y` referral code |
 | `docs/CLAIM-MUSE.id.md` | The same Muse claim guide in Indonesian |
 | `docs/images/banner.svg` | The title image above |
 | `scripts/setup-sshd.sh` | **The VM-side sshd installer** — builds a key-only sshd on localhost port 2222 from the example config |

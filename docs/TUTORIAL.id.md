@@ -9,7 +9,7 @@ masuk ke VM Muse kamu pakai SSH — privat lewat Tailscale, pakai kunci
 
 Belum punya akun Muse? Mulai dari
 **[petunjuk klaim Muse](CLAIM-MUSE.id.md)** dulu — ada jalur VPN dan
-tanpa VPN, plus kode referral **`IB4FJR`** (tukar dalam 48 jam, kita
+tanpa VPN, plus kode referral **`MZMT4Y`** (tukar dalam 48 jam, kita
 berdua dapat 1 miliar token).
 
 ---
